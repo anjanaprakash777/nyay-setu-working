@@ -46,7 +46,7 @@
 
 <hr/>
 
-## Why Nyay Saarthi?
+## Why Nyay Setu?
 
 The Indian judiciary faces a systemic crisis that affects hundreds of millions of citizens:
 
@@ -104,12 +104,119 @@ JWT-based stateless authentication with Spring Security, role-based access contr
 
 <hr/>
 
+## Project Structure
+
+```text
+nyay-setu-working/
+│
+├── frontend/                        # React + Vite frontend application
+│   └── nyaysetu-frontend/           # Main frontend source code
+│       ├── src/
+│       │   ├── components/          # Reusable UI components
+│       │   ├── pages/               # Application pages/routes
+│       │   ├── services/            # API service handlers
+│       │   ├── hooks/               # Custom React hooks
+│       │   ├── store/               # Zustand/global state management
+│       │   ├── utils/               # Helper and utility functions
+│       │   └── assets/              # Images, icons, and static assets
+│       ├── public/                  # Public static files
+│       └── package.json             # Frontend dependencies and scripts
+│
+├── backend/                         # Spring Boot backend services
+│   └── nyaysetu-backend/
+│       ├── src/main/java/           # Main backend application source
+│       ├── src/main/resources/      # Configuration files and resources
+│       ├── src/test/                # Backend test cases
+│       └── pom.xml                  # Maven configuration
+│
+├── nlp-orchestrator/                # FastAPI-based NLP orchestration service
+│   ├── main.py                      # Main FastAPI application entry point
+│   ├── services/                    # NLP and AI processing services
+│   ├── routes/                      # API route handlers
+│   ├── models/                      # AI/NLP models and schemas
+│   └── requirements.txt             # Python dependencies
+│
+├── docs/                            # Project documentation
+│   ├── architecture/                # Architecture and system design docs
+│   ├── setup.md                     # Setup and installation guide
+│   └── additional-guides/           # Supporting documentation
+│
+├── assets/                          # README banners, screenshots, and assets
+│
+├── .github/                         # GitHub workflows and community files
+│   ├── workflows/                   # CI/CD GitHub Actions workflows
+│   └── ISSUE_TEMPLATE/              # GitHub issue templates
+│
+├── CONTRIBUTING.md                  # Contribution guidelines
+├── README.md                        # Main project documentation
+├── LICENSE                          # Open-source license
+└── SYSTEM_DOCUMENTATION.md          # API and system documentation
+```
+
+### Directory Overview
+
+| Directory | Purpose |
+|---|---|
+| `frontend/` | Contains the React frontend application and UI components |
+| `backend/` | Handles APIs, authentication, database access, and business logic |
+| `nlp-orchestrator/` | Manages AI-powered legal assistance and NLP workflows |
+| `docs/` | Contains setup guides, architecture diagrams, and technical documentation |
+| `assets/` | Stores README images, banners, and other static assets |
+| `.github/` | GitHub workflows, templates, and repository automation |
+
 ## System Architecture & Data Flow
 
 Nyay Setu's architecture is a microservices ecosystem structured into three tiers:
 1. **Frontend Tier (React + Vite)**: Renders role-based interactive dashboards, provides client-side WebRTC capabilities for virtual hearings, handles audio recording via browser APIs, and features a dynamic 3D Hologram Avatar component.
 2. **Core Backend Tier (Spring Boot)**: Manages case creation, secure session handling, user credentials, document verification vaults (SHA-256 hashed), Bhashini Indic language services integration, and routes conversational requests.
 3. **NLP & AI Tier (FastAPI)**: Coordinates advanced legal reasoning pipelines, decompiles multi-part queries, executes parallel web research on Indian Kanoon databases, synthesizes citations, and converts final summaries to Hinglish dialogue.
+
+### High-Level Service Communication
+
+The following diagram shows the primary communication flow between the Frontend, Spring Boot Backend, and Python NLP services.
+
+```mermaid
+flowchart LR
+
+    User[User]
+
+    Frontend[React + Vite Frontend]
+
+    Backend[Spring Boot Backend]
+
+    NLP[NLP Orchestrator<br/>FastAPI]
+
+    LawGPT[LawGPT Service<br/>RAG Engine]
+
+    DB[(PostgreSQL)]
+
+    Groq[Groq API]
+    Gemini[Gemini API]
+
+    User --> Frontend
+
+    Frontend --> Backend
+
+    Backend --> DB
+
+    Backend --> NLP
+
+    Backend --> LawGPT
+
+    NLP --> Groq
+    NLP --> Gemini
+
+    LawGPT --> Groq
+```
+
+**Flow Overview**
+
+1. Users interact with the React frontend.
+2. Requests are routed to the Spring Boot backend.
+3. The backend manages authentication, case records, and database operations.
+4. AI-related requests are forwarded to the Python NLP Orchestrator.
+5. Legal knowledge retrieval is handled through the LawGPT RAG service.
+6. The NLP services communicate with external AI providers such as Groq and Gemini to generate responses.
 
 ### Component Architecture & Interactions
 
@@ -240,6 +347,13 @@ sequenceDiagram
 
 <hr/>
 
+## API Versioning Strategy
+
+This project implements a robust API versioning strategy starting from `v1`. 
+- The stable release of our APIs is accessible under the `/api/v1/` prefix.
+- A global `WebMvcConfigurer` automatically prefixes all backend controllers. 
+- Any future breaking changes will be introduced under a new version (e.g., `/api/v2/`), ensuring backward compatibility for existing client applications.
+
 ## Quick Start
 
 For complete setup instructions, environment configuration, and Docker deployment details, refer to the **[Detailed Setup Guide](./docs/setup.md)**.
@@ -260,12 +374,28 @@ For environment variables, copy `.env.example` to `.env` and fill in your values
 
 ## Documentation
 
+### Getting Started
 | Document | Description |
 |---|---|
+| [API Quick Start](./API_QUICKSTART.md) | 5-minute introduction to APIs (start here!) |
 | [Setup Guide](./docs/setup.md) | Full database setup, environment variables, and Docker configuration |
 | [Architecture Overview](./docs/architecture/overview.md) | System design, component diagrams, and data flow |
+
+### API Documentation & Integration
+| Document | Description |
+|---|---|
+| [OpenAPI/Swagger Spec](./openapi.yaml) | Complete API specification in OpenAPI 3.0 format |
+| [API Testing Guide](./API_TESTING_GUIDE.md) | Comprehensive guide for testing APIs with Postman, cURL, Python, JavaScript |
+| [API Endpoints Reference](./API_ENDPOINTS_COMPREHENSIVE.md) | Detailed documentation of all 100+ endpoints with request/response schemas |
+| [API Quick Reference](./API_QUICK_REFERENCE.md) | Quick lookup table for endpoints by user role and service |
+| [API Integration Checklist](./API_INTEGRATION_CHECKLIST.md) | Step-by-step checklist for integrating APIs into applications |
+| [Postman Collection](./Nyay_Setu_API_Collection.postman_collection.json) | Ready-to-import Postman collection with all endpoints and examples |
+
+### Additional Resources
+| Document | Description |
+|---|---|
 | [AI Integration Guide](./AI_INTEGRATION_GUIDE.md) | Groq API and NLP orchestrator technical deep-dive |
-| [API Documentation](./SYSTEM_DOCUMENTATION.md) | All REST endpoints with request and response specifications |
+| [System Documentation](./SYSTEM_DOCUMENTATION.md) | Existing REST endpoints and specifications |
 | [Contributing Guidelines](./CONTRIBUTING.md) | Branching strategy, commit conventions, and PR workflow |
 
 <hr/>
@@ -287,6 +417,66 @@ This project is part of **GSSoC (GirlScript Summer of Code) 2026**. Contribution
 Browse [open issues](https://github.com/viru0909-dev/nyay-setu-working/issues) and filter by `good first issue` to get started.
 
 <hr/>
+
+## Troubleshooting
+
+### Common Setup Issues
+
+#### 1. npm install fails
+- Ensure Node.js version is `>= 20`
+- Delete `node_modules` and reinstall dependencies:
+
+```bash
+rm -rf node_modules
+npm install
+```
+
+---
+
+#### 2. PostgreSQL connection issues
+- Verify PostgreSQL service is running
+- Check database credentials in `.env`
+- Ensure database and user are created properly
+
+---
+
+#### 3. Java version mismatch
+Verify Java version:
+
+```bash
+java -version
+```
+
+Ensure Java 17 is installed and configured correctly.
+
+---
+
+#### 4. Missing environment variables
+- Copy `.env.example` to `.env`
+- Fill all required variables before starting services
+
+---
+
+#### 5. Backend server not starting
+- Ensure PostgreSQL is running
+- Verify Maven installation:
+
+```bash
+mvn -version
+```
+
+- Check all dependencies are installed properly
+
+---
+
+#### 6. Port already in use
+Stop conflicting processes or use different ports.
+
+Example:
+
+```bash
+npx kill-port 3000
+```
 
 ## Contributors
 

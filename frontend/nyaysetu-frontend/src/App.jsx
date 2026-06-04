@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect, Suspense, lazy, useState } from 'react';
 import useAuthStore from './store/authStore';
 import { LanguageProvider } from './contexts/LanguageContext.jsx';
 // CHANGED: ThemeProvider added — wraps the entire app so all components can access theme
@@ -11,6 +11,11 @@ import ScrollToTop from './ScrollToTop';
 // PWA Components
 import OfflineIndicator from './components/OfflineIndicator';
 import UpdateNotification from './components/UpdateNotification';
+import GuestWelcomeToast from './components/guest/GuestWelcomeToast';
+import GuestOnboardingHint from './components/guest/GuestOnboardingHint';
+
+import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
+import KeyboardShortcutsModal from './components/common/KeyboardShortcutsModal';
 
 // Lazy load pages for better performance
 const Landing = lazy(() => import('./pages/Landing'));
@@ -41,7 +46,6 @@ const CaseDetailPage = lazy(() => import('./pages/litigant/CaseDetailPage'));
 const HearingsPage = lazy(() => import('./pages/litigant/HearingsPage'));
 const LawyerChatPage = lazy(() => import('./pages/litigant/LawyerChatPage'));
 const ProfilePage = lazy(() => import('./pages/litigant/ProfilePage'));
-const ForensicsPage = lazy(() => import('./pages/litigant/ForensicsPage'));
 const DocumentGeneratePage = lazy(() => import('./pages/litigant/DocumentGeneratePage'));
 const FindLawyerPage = lazy(() => import('./pages/litigant/FindLawyerPage'));
 const LawyerFeedbackPage = lazy(() => 
@@ -81,12 +85,30 @@ const MyFirsPage = lazy(() => import('./pages/police/MyFirsPage'));
 const PoliceInvestigationsPage = lazy(() => import('./pages/police/PoliceInvestigationsPage'));
 const InvestigationDetailsPage = lazy(() => import('./pages/police/InvestigationDetailsPage'));
 
+const GuestAuthRedirect = ({ location }) => {
+    const setGuestIntent = useAuthStore((s) => s.setGuestIntent);
+
+    useEffect(() => {
+        setGuestIntent({
+            path: `${location.pathname}${location.search}`,
+            feature: 'access your dashboard',
+        });
+    }, [location.pathname, location.search, setGuestIntent]);
+
+    return <Navigate to="/signup" replace state={{ from: location }} />;
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
-    const { isAuthenticated, user } = useAuthStore();
+    const location = useLocation();
+    const { isAuthenticated, isGuest, user } = useAuthStore();
+
+    if (isGuest) {
+        return <GuestAuthRedirect location={location} />;
+    }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" replace state={{ from: location }} />;
     }
 
     if (allowedRoles && !allowedRoles.includes(user?.role)) {
@@ -96,8 +118,25 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return children;
 };
 
+function KeyboardAccessibilityProvider({ user }) {
+    const [showShortcuts, setShowShortcuts] = useState(false);
+
+    useKeyboardShortcuts({
+        user,
+        onOpenHelp: () => setShowShortcuts(true),
+        onCloseHelp: () => setShowShortcuts(false),
+    });
+
+    return (
+        <KeyboardShortcutsModal
+            isOpen={showShortcuts}
+            onClose={() => setShowShortcuts(false)}
+        />
+    );
+}
+
 function App({ swRegistration }) {
-    const { initAuth } = useAuthStore();
+    const { initAuth, user } = useAuthStore();
 
     useEffect(() => {
         initAuth();
@@ -119,6 +158,9 @@ function App({ swRegistration }) {
                             v7_relativeSplatPath: true
                         }}
                     >
+                        <KeyboardAccessibilityProvider user={user} />
+                        <GuestWelcomeToast />
+                        <GuestOnboardingHint />
                         <ScrollToTop />
                         <Suspense fallback={<LoadingSpinner fullScreen message="Loading NyaySetu..." />}>
                             <Routes>
@@ -152,7 +194,6 @@ function App({ swRegistration }) {
                                     <Route path="find-lawyer" element={<FindLawyerPage />} />
                                     <Route path="feedback" element={<LawyerFeedbackPage />} />
                                     <Route path="profile" element={<ProfilePage />} />
-                                    <Route path="forensics" element={<ForensicsPage />} />
                                     <Route path="generate-document" element={<DocumentGeneratePage />} />
                                 </Route>
 
